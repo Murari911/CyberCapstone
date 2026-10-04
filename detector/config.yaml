@@ -1,0 +1,25 @@
+# Detection thresholds — tune these based on observed normal traffic
+
+spike:
+  enabled: true
+  pps_threshold: 50        # packets/sec in a window to flag as a spike
+  window_seconds: 5
+
+unknown_ip:
+  enabled: true
+  # private/local ranges are never flagged as "unknown"
+  trusted_ranges:
+    - "10.0.0.0/8"
+    - "172.16.0.0/12"
+    - "192.168.0.0/16"
+    - "127.0.0.0/8"
+
+repeated_attempts:
+  enabled: true
+  attempt_threshold: 10    # same src_ip -> same dst_port, N+ times
+  window_seconds: 10
+
+port_scan:
+  enabled: true
+  distinct_port_threshold: 15   # one src_ip hitting N+ distinct ports
+  window_seconds: 10
