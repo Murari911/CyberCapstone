@@ -130,15 +130,46 @@ def tab_reports(conn):
     st.subheader("Generate Reports")
     st.write("Export current traffic and alert data for the project report.")
 
-    if st.button("Export Traffic Summary (CSV)"):
-        df = load_recent_stats(conn, limit=1000)
-        df.to_csv("reports/traffic_summary.csv", index=False)
-        st.success("Saved to reports/traffic_summary.csv")
+    # Traffic summary CSV — direct in-browser download, works even when deployed
+    stats_df = load_recent_stats(conn, limit=1000)
+    st.download_button(
+        "Download Traffic Summary (CSV)",
+        data=stats_df.to_csv(index=False),
+        file_name="traffic_summary.csv",
+        mime="text/csv",
+    )
 
-    if st.button("Export Alerts Log (CSV)"):
-        df = load_alerts(conn, limit=1000)
-        df.to_csv("reports/alerts_log.csv", index=False)
-        st.success("Saved to reports/alerts_log.csv")
+    # Alerts log CSV
+    alerts_df = load_alerts(conn, limit=1000)
+    st.download_button(
+        "Download Alerts Log (CSV)",
+        data=alerts_df.to_csv(index=False),
+        file_name="alerts_log.csv",
+        mime="text/csv",
+    )
+
+    # Security report PDF — generate on click, then offer direct download
+    if st.button("Generate Security Report (PDF)"):
+        import sys
+        sys.path.insert(0, "reports")
+        from generate import fetch_summary, fetch_alerts, build_pdf
+
+        window = 3600
+        summary = fetch_summary(conn, window)
+        alerts = fetch_alerts(conn, window)
+        pdf_path = "reports/security_report.pdf"
+        build_pdf(pdf_path, summary, alerts, window)
+
+        with open(pdf_path, "rb") as f:
+            pdf_bytes = f.read()
+
+        st.success("Report generated.")
+        st.download_button(
+            "Download Security Report (PDF)",
+            data=pdf_bytes,
+            file_name="security_report.pdf",
+            mime="application/pdf",
+        )
 
 
 def main():
