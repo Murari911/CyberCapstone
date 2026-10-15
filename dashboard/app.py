@@ -15,6 +15,65 @@ REFRESH_SECONDS = 5
 
 st.set_page_config(page_title="Network Traffic Analyzer", layout="wide")
 
+st.markdown("""
+<style>
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+        max-width: 1200px;
+    }
+    h1, h2, h3 {
+        font-weight: 600;
+        letter-spacing: -0.02em;
+    }
+    [data-testid="stMetric"] {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 16px 20px;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    [data-testid="stMetric"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(37, 99, 235, 0.15);
+        border-color: rgba(37, 99, 235, 0.4);
+    }
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 4px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 8px 8px 0 0;
+        padding: 10px 18px;
+        font-weight: 500;
+    }
+    .stButton button, .stDownloadButton button {
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.15s ease;
+        border: 1px solid rgba(37, 99, 235, 0.3);
+    }
+    .stButton button:hover, .stDownloadButton button:hover {
+        border-color: #2563eb;
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+    }
+    [data-testid="stDataFrame"] {
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .stAlert {
+        border-radius: 10px;
+    }
+    @media (max-width: 768px) {
+        [data-testid="column"] {
+            width: 100% !important;
+            flex: 1 1 100% !important;
+            min-width: 100% !important;
+        }
+    }
+</style>
+""", unsafe_allow_html=True)
+
 
 def get_connection():
     return sqlite3.connect(DB_PATH, check_same_thread=False)
@@ -173,7 +232,14 @@ def tab_reports(conn):
 
 
 def main():
-    st.title("🛡️ Network Traffic Analyzer")
+    st.markdown("""
+    <div style="margin-bottom: 0.5rem;">
+        <h1 style="margin-bottom: 0;">🛡️ Network Traffic Analyzer</h1>
+        <p style="color: #94a3b8; font-size: 0.95rem; margin-top: 4px;">
+            Real-time packet capture, traffic monitoring, and threat detection
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
     conn = get_connection()
 
     tabs = st.tabs(["Overview", "Connections", "Alerts", "Reports"])
