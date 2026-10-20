@@ -5,3 +5,7 @@ db/*.db
 data/sample_pcaps/*.pcap
 .env
 *.log
+
+reports/*.csv
+reports/*.pdf
+*:Zone.Identifier
