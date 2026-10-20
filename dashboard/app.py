@@ -121,16 +121,16 @@ def tab_overview(conn):
 
     if not stats_df.empty:
         stats_df["time"] = pd.to_datetime(stats_df["window_end"], unit="s")
-        fig = px.line(stats_df, x="time", y="packet_count", title="Packets per Window")
+        fig = px.line(stats_df, x="time", y="packet_count", title="Packets per Window", template="plotly_dark")
         st.plotly_chart(fig, use_container_width=True)
 
-        fig2 = px.line(stats_df, x="time", y="total_bytes", title="Bandwidth (bytes per Window)")
+        fig2 = px.line(stats_df, x="time", y="total_bytes", title="Bandwidth (bytes per Window)", template="plotly_dark")
         st.plotly_chart(fig2, use_container_width=True)
 
     if not packets_df.empty:
         proto_counts = packets_df["protocol"].value_counts().reset_index()
         proto_counts.columns = ["protocol", "count"]
-        fig3 = px.pie(proto_counts, names="protocol", values="count", title="Protocol Distribution (last 60s)")
+        fig3 = px.pie(proto_counts, names="protocol", values="count", title="Protocol Distribution (last 60s)", template="plotly_dark", hole=0.4)
         st.plotly_chart(fig3, use_container_width=True)
     else:
         st.info("No packets captured yet. Make sure sniffer.py is running.")
@@ -159,7 +159,7 @@ def tab_connections(conn):
         .head(10)
     )
     st.subheader("Top Talkers")
-    fig = px.bar(top_talkers, x="src_ip", y="bytes", title="Bytes Sent by Source IP")
+    fig = px.bar(top_talkers, x="src_ip", y="bytes", title="Bytes Sent by Source IP", template="plotly_dark", color_discrete_sequence=["#2563eb"])
     st.plotly_chart(fig, use_container_width=True)
 
 
@@ -175,13 +175,17 @@ def tab_alerts(conn):
     )
     filtered = alerts_df[alerts_df["severity"].isin(severity_filter)]
 
+    severity_icons = {"low": "🟢 low", "medium": "🟡 medium", "high": "🔴 high"}
+    display_df = filtered.copy()
+    display_df["severity"] = display_df["severity"].map(severity_icons).fillna(display_df["severity"])
+
     st.subheader(f"Suspicious Activity ({len(filtered)} alerts)")
-    st.dataframe(filtered, use_container_width=True)
+    st.dataframe(display_df, use_container_width=True, hide_index=True)
 
     severity_counts = alerts_df["severity"].value_counts().reset_index()
     severity_counts.columns = ["severity", "count"]
-    fig = px.bar(severity_counts, x="severity", y="count", title="Alerts by Severity",
-                 color="severity", color_discrete_map={"low": "green", "medium": "orange", "high": "red"})
+    fig = px.bar(severity_counts, x="severity", y="count", title="Alerts by Severity", template="plotly_dark",
+                 color="severity", color_discrete_map={"low": "#22c55e", "medium": "#f59e0b", "high": "#ef4444"})
     st.plotly_chart(fig, use_container_width=True)
 
 
@@ -232,6 +236,27 @@ def tab_reports(conn):
 
 
 def main():
+    with st.sidebar:
+        st.markdown("### System Status")
+        conn_check = get_connection()
+        try:
+            recent = conn_check.execute(
+                "SELECT COUNT(*) FROM packets WHERE timestamp >= ?", (time.time() - 15,)
+            ).fetchone()[0]
+            if recent > 0:
+                st.success("Capture: Active")
+            else:
+                st.warning("Capture: No recent packets")
+        except Exception:
+            st.error("Capture: Unreachable")
+
+        total_alerts = conn_check.execute("SELECT COUNT(*) FROM alerts").fetchone()[0]
+        st.metric("Total Alerts Logged", total_alerts)
+
+        st.markdown("---")
+        st.caption("Network Traffic Analyzer")
+        st.caption("Scapy · SQLite · Streamlit")
+
     st.markdown("""
     <div style="margin-bottom: 0.5rem;">
         <h1 style="margin-bottom: 0;">🛡️ Network Traffic Analyzer</h1>
